@@ -32,6 +32,7 @@ public class PropertiesResource {
         properties.put("name","Dan Testehan");
         properties.put("email","secret@secret.com");
         properties.put("phone","911");
+        properties.put("mobile-phone","0726....");
         return properties;
     }
 }
