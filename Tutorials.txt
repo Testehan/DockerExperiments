@@ -263,6 +263,7 @@ Image Building Best Practices
 Tutorials
     http://localhost/tutorial/our-application/          (this runs when you run the docker container tutorial)
     https://openliberty.io/guides/docker.html#launching-open-liberty-in-dev-mode        docker+openliberty combo :)
+    https://ellin.com/2020/08/16/using-open-liberty-with-docker/
 
 
 Video tutorials
@@ -270,3 +271,59 @@ Video tutorials
     https://www.youtube.com/watch?v=GGaDSAMeopo
     https://app.pluralsight.com/library/courses/getting-started-docker/table-of-contents         very weak course 1/5
 ---------------------------------------
+
+
+About the app
+    when you run the command "mvn liberty:devc" this is what happens:
+    "The Open Liberty Maven plug-in includes a devc goal that builds a Docker image, mounts the required directories, binds
+    the required ports, and then runs the application inside of a container. This development mode, known as dev mode, also listens
+    for any changes in the application source code or configuration and rebuilds the image and restarts the container as necessary."
+
+    TODO Then try to push the image to a registry and run it in a container from that online tool mentioned by telusko and nana
+    Continue from here...try to push the rest app to docker hub and run it in the playground..
+        https://labs.play-with-docker.com/
+
+    docker run --rm -p 9080:9080 -p 9443:9443 -p 7777:7777 -e WLP_DEBUG_SUSPEND=n -e WLP_DEBUG_ADDRESS=7777 -e WLP_DEBUG_REMOTE=y -v /Users/danteshte/JavaProjects/DockerExperiments/target/.libertyDevc/apps:/config/apps -v /Users/danteshte/JavaProjects/DockerExperiments/target/.libertyDevc/dropins:/config/dropins -v /Users/danteshte/JavaProjects/DockerExperiments:/devmode -v /Users/danteshte/JavaProjects/DockerExperiments/target/liberty/wlp/usr/servers/defaultServer/logs:/logs -v /Users/danteshte/.m2/repository:/devmode-maven-cache -v /Users/danteshte/JavaProjects/DockerExperiments/src/main/liberty/config/server.xml:/config/server.xml --name liberty-dev dockerexperiments-dev-mode server debug defaultServer -- --io.openliberty.tools.projectRoot=/devmode
+
+    Explanation of the command from above                                                                        Explanation for each option
+    docker run
+        --rm                                                                                                        // Automatically remove the container when it exits
+        -p 9080:9080 -p 9443:9443 -p 7777:7777
+        -e WLP_DEBUG_SUSPEND=n -e WLP_DEBUG_ADDRESS=7777 -e WLP_DEBUG_REMOTE=y                                      // Set environment variables
+        -v /Users/danteshte/JavaProjects/DockerExperiments/target/.libertyDevc/apps:/config/apps                    // Bind mount a volume
+        -v /Users/danteshte/JavaProjects/DockerExperiments/target/.libertyDevc/dropins:/config/dropins              // Bind mount a volume
+        -v /Users/danteshte/JavaProjects/DockerExperiments:/devmode                                                 // Bind mount a volume
+        -v /Users/danteshte/JavaProjects/DockerExperiments/target/liberty/wlp/usr/servers/defaultServer/logs:/logs  // Bind mount a volume
+        -v /Users/danteshte/.m2/repository:/devmode-maven-cache                                                     // Bind mount a volume
+        -v /Users/danteshte/JavaProjects/DockerExperiments/src/main/liberty/config/server.xml:/config/server.xml    // Bind mount a volume
+        --name liberty-dev                                                                                          // Assign a name to the container
+        dockerexperiments-dev-mode                                                                                  // this is the image name that will be run in the container
+        server debug defaultServer
+        -- --io.openliberty.tools.projectRoot=/devmode
+
+    Simplified command just for running the app
+        docker build -t my-rest-app:1.0 .                                                   (build the image directly, so that war is present in it..see below more info)
+        docker run -d -p 9080:9080 --name my-liberty-rest-app my-rest-app:1.0               (run this new image directly)
+
+    (this is an image that runs openliberty with the rest app inside of it. I can't run the image that is created by the
+    liberty:dev build, because that is a special image, that from what I saw does not contain the .war file...See the explanation from
+    below "What is the deal with all those mounted volumes from the command?", especially the part "
+    Dev mode only supports the application under development in the current project so to avoid application conflicts,
+    dev mode removes all Dockerfile commands that copy or add a .war file.". So..because of the hot deploymend that is needed in dev mode,
+    the image created by this devmode does not contain the war and so it is just an empty open liberty server..)
+
+
+    What is the deal with all those mounted volumes from the command?(dan)
+        Dev mode works with a temporary, modified copy of your Dockerfile to allow for hot deployment during development as detailed below.
+        When dev mode starts up, it pulls the latest version of the parent image defined in the Dockerfile, builds the container image,
+        then runs the container. Note that the context of the docker build command used to generate the container image is the directory
+        containing the Dockerfile, unless the dockerBuildContext parameter is specified. When dev mode exits, the container is stopped
+        and deleted, and the logs are preserved in the directory mentioned above.
+
+        Hot deployment is made possible because the application is installed as a loose application WAR. This method uses a file type
+        of .war.xml which is functionally equivalent to the .war file. Dev mode only supports the application under development in the
+        current project so to avoid application conflicts, dev mode removes all Dockerfile commands that copy or add a .war file.
+
+        The .war.xml file is generated in the defaultServer/apps or the defaultServer/dropins directory so these directories are
+        mounted in the container. Therefore any files that the Dockerfile may have copied into these directories in the
+        container image will not be accessible.
