@@ -1,8 +1,10 @@
 Docker notes
 
 Docker commands:
+    docker pull postgres:15.1-alpine           (15.1-alpine is the version of this image)
     docker images - show the images on your machine
     docker ps - shows the currently running containers and what images they running, and various other info like ports
+    docker ps --filter "status=exited"  - shows stopped containers
     docker run - creates a new container from an image (with the -d option your command line will print just the container ID
                 and the container will start in detached mode..without all the logs from the container..so you can use
                 terminal for other things)...
@@ -50,6 +52,18 @@ Docker commands:
 !!!!    we use this to build an image by using a docker file
         (we need to specify a name and version using -t option.... The last point means that the Dockerfile location is
         in the current directory...)
+
+   docker build -t teshte/nodeapp -f node.dockerfile .
+        -here, by using the -f option, you can specify the docker file name (you can use this when you don't want to use the default
+        file name for the Dockerfile..you still need the dot at the end of the command if the current folder is where this
+        node.dockerfile file is located)
+        -also added "teshte/" because i also want to push this image to the docker registry, and for that you need this username prefix
+
+
+    docker cp pgsql-DB:/var/lib/postgresql/data/pg_hba.conf .
+        TO COPY THAT file from the container to the current dir
+    docker cp file.ext <container>:/path/to/file.ext
+        to copy from local machine to the container
 
 Docker network
     - docker creates its isolated docker network where the containers are running in
@@ -265,11 +279,14 @@ Tutorials
     https://openliberty.io/guides/docker.html#launching-open-liberty-in-dev-mode        docker+openliberty combo :)
     https://ellin.com/2020/08/16/using-open-liberty-with-docker/
 
+Other links
+    https://stackoverflow.com/questions/30853247/how-do-i-edit-a-file-after-i-shell-to-a-docker-container
 
 Video tutorials
     https://www.youtube.com/watch?v=3c-iBn73dDE         Best one yet... 10/5
     https://www.youtube.com/watch?v=GGaDSAMeopo
     https://app.pluralsight.com/library/courses/getting-started-docker/table-of-contents         very weak course 1/5
+    https://app.pluralsight.com/library/courses/9f98cd6c-7c9c-4e64-a491-95e9361be47f Building and Running Your First Docker App
 ---------------------------------------
 
 
@@ -280,6 +297,8 @@ About the app
     for any changes in the application source code or configuration and rebuilds the image and restarts the container as necessary."
 
     TODO Then try to push the image to a registry and run it in a container from that online tool mentioned by telusko and nana
+        problem is that either the image is too big for that tool...or there are space issues on the tool...i could howwer install
+        docker on work machine and see if it runs there
     Continue from here...try to push the rest app to docker hub and run it in the playground..
         https://labs.play-with-docker.com/
 
