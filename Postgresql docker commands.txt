@@ -1,0 +1,12 @@
+1. Connect to the DB server     (execute this from the Docker Postgresql container terminal)
+    psql -h localhost -U postgres
+
+2. List available DBs
+    After connecting the prompt will change to "postgres=#"
+     \l     will display available DBs
+
+3. Connecting to a specific DB
+    \c sales
+
+4. List tables form that DB
+    \dt
